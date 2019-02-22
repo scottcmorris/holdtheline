@@ -1,0 +1,25 @@
+sudo: required
+language: python
+services:
+- docker
+python:
+- '3.6'
+before_script:
+- docker-compose build
+script:
+- docker-compose run --rm web bash -c "flake8 . && python wait_for_postgres.py &&
+  ./manage.py test"
+after_success:
+- if [ "$TRAVIS_BRANCH" == "master" ]; then docker login --username=_ --password="$HEROKU_AUTH_TOKEN"
+  registry.heroku.com; docker tag web registry.heroku.com/holdtheline-prod/web; docker
+  push registry.heroku.com/holdtheline-prod/web; fi
+- if [ "$TRAVIS_BRANCH" == "qa" ]; then docker login --username=_ --password="$HEROKU_AUTH_TOKEN"
+  registry.heroku.com; docker tag web registry.heroku.com/holdtheline-qa/web; docker
+  push registry.heroku.com/holdtheline-qa/web; fi
+notifications:
+  email: false
+cache:
+  pip: true
+env:
+  global:
+    secure: B5ubdPPwGo9bbnr+QM5R1n5picamd0MBPDeSGXoeXiwB++1XQrzsE3O+xi8O7bkiUrDz+HNZjCfjgF0RqUGsxKzg1zmEcUZy9yQHCMrHLuOiqL+uigFQ8EqERUwLWyGxjvckp+xPbf9xvRuNKTwaqBEg5VYiVSD0J2FwuUTcK7lFonJnPlzgtjPI9442t8/LENZaKnonQJ0/eANTrx7DMKe2dr+YS1gMw3DpWERcKhnN6I6gB5BDkkFQ/ob7lwleExuPaio9UgoRlp7w7D+Wt0hcLfmFwrXkYl0TPhnCG0i8WlSJJ22XktVRzxPDA5FO79SZYS3r464T+43A+Yk6IirPf0xb+UWbUSVGZYo3FyM2MYB5zcMz2Ifm1bgAeYgdqAbJ67cxexMIpVVDUZAjfRJzTwz+s2TbINilftqT+WoVJZhqAqXyxWqD4euCHo1lOKcGY9nvk105sY/DBGIZOsIX30gwj0dOb6C3/++b+xGpnr60fGojyIpiCWyZimCnYnlxWbqxvDK8ZP8W20MNTi0EbHKBbule1VF747Lh5KaSj8L2eH7vfDJBb3AodicV9ZDdUojTcnc2grhlkMbGpygv1pG8O5yqAC//2Z8RlLzAMnnBNaEdkk/iuXFV5KXIIitv7p8nbzPG/FHASrqV1i/B/5kWE114IuBc27bAkuA=
