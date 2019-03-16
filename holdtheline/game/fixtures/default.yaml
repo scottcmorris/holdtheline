@@ -1,0 +1,300 @@
+- fields:
+    color: 0
+    value: 1
+  model: game.card
+  pk: 1
+- fields:
+    color: 0
+    value: 2
+  model: game.card
+  pk: 2
+- fields:
+    color: 0
+    value: 3
+  model: game.card
+  pk: 3
+- fields:
+    color: 0
+    value: 4
+  model: game.card
+  pk: 4
+- fields:
+    color: 0
+    value: 5
+  model: game.card
+  pk: 5
+- fields:
+    color: 0
+    value: 6
+  model: game.card
+  pk: 6
+- fields:
+    color: 0
+    value: 7
+  model: game.card
+  pk: 7
+- fields:
+    color: 0
+    value: 8
+  model: game.card
+  pk: 8
+- fields:
+    color: 0
+    value: 9
+  model: game.card
+  pk: 9
+- fields:
+    color: 0
+    value: 10
+  model: game.card
+  pk: 10
+- fields:
+    color: 1
+    value: 1
+  model: game.card
+  pk: 11
+- fields:
+    color: 1
+    value: 2
+  model: game.card
+  pk: 12
+- fields:
+    color: 1
+    value: 3
+  model: game.card
+  pk: 13
+- fields:
+    color: 1
+    value: 4
+  model: game.card
+  pk: 14
+- fields:
+    color: 1
+    value: 5
+  model: game.card
+  pk: 15
+- fields:
+    color: 1
+    value: 6
+  model: game.card
+  pk: 16
+- fields:
+    color: 1
+    value: 7
+  model: game.card
+  pk: 17
+- fields:
+    color: 1
+    value: 8
+  model: game.card
+  pk: 18
+- fields:
+    color: 1
+    value: 9
+  model: game.card
+  pk: 19
+- fields:
+    color: 1
+    value: 10
+  model: game.card
+  pk: 20
+- fields:
+    color: 2
+    value: 1
+  model: game.card
+  pk: 21
+- fields:
+    color: 2
+    value: 2
+  model: game.card
+  pk: 22
+- fields:
+    color: 2
+    value: 3
+  model: game.card
+  pk: 23
+- fields:
+    color: 2
+    value: 4
+  model: game.card
+  pk: 24
+- fields:
+    color: 2
+    value: 5
+  model: game.card
+  pk: 25
+- fields:
+    color: 2
+    value: 6
+  model: game.card
+  pk: 26
+- fields:
+    color: 2
+    value: 7
+  model: game.card
+  pk: 27
+- fields:
+    color: 2
+    value: 8
+  model: game.card
+  pk: 28
+- fields:
+    color: 2
+    value: 9
+  model: game.card
+  pk: 29
+- fields:
+    color: 2
+    value: 10
+  model: game.card
+  pk: 30
+- fields:
+    color: 3
+    value: 1
+  model: game.card
+  pk: 31
+- fields:
+    color: 3
+    value: 2
+  model: game.card
+  pk: 32
+- fields:
+    color: 3
+    value: 3
+  model: game.card
+  pk: 33
+- fields:
+    color: 3
+    value: 4
+  model: game.card
+  pk: 34
+- fields:
+    color: 3
+    value: 5
+  model: game.card
+  pk: 35
+- fields:
+    color: 3
+    value: 6
+  model: game.card
+  pk: 36
+- fields:
+    color: 3
+    value: 7
+  model: game.card
+  pk: 37
+- fields:
+    color: 3
+    value: 8
+  model: game.card
+  pk: 38
+- fields:
+    color: 3
+    value: 9
+  model: game.card
+  pk: 39
+- fields:
+    color: 3
+    value: 10
+  model: game.card
+  pk: 40
+- fields:
+    color: 4
+    value: 1
+  model: game.card
+  pk: 41
+- fields:
+    color: 4
+    value: 2
+  model: game.card
+  pk: 42
+- fields:
+    color: 4
+    value: 3
+  model: game.card
+  pk: 43
+- fields:
+    color: 4
+    value: 4
+  model: game.card
+  pk: 44
+- fields:
+    color: 4
+    value: 5
+  model: game.card
+  pk: 45
+- fields:
+    color: 4
+    value: 6
+  model: game.card
+  pk: 46
+- fields:
+    color: 4
+    value: 7
+  model: game.card
+  pk: 47
+- fields:
+    color: 4
+    value: 8
+  model: game.card
+  pk: 48
+- fields:
+    color: 4
+    value: 9
+  model: game.card
+  pk: 49
+- fields:
+    color: 4
+    value: 10
+  model: game.card
+  pk: 50
+- fields:
+    color: 5
+    value: 1
+  model: game.card
+  pk: 51
+- fields:
+    color: 5
+    value: 2
+  model: game.card
+  pk: 52
+- fields:
+    color: 5
+    value: 3
+  model: game.card
+  pk: 53
+- fields:
+    color: 5
+    value: 4
+  model: game.card
+  pk: 54
+- fields:
+    color: 5
+    value: 5
+  model: game.card
+  pk: 55
+- fields:
+    color: 5
+    value: 6
+  model: game.card
+  pk: 56
+- fields:
+    color: 5
+    value: 7
+  model: game.card
+  pk: 57
+- fields:
+    color: 5
+    value: 8
+  model: game.card
+  pk: 58
+- fields:
+    color: 5
+    value: 9
+  model: game.card
+  pk: 59
+- fields:
+    color: 5
+    value: 10
+  model: game.card
+  pk: 60

@@ -24,6 +24,7 @@ class Common(Configuration):
 
         # Your apps
         'holdtheline.users',
+        'holdtheline.game',
 
     )
 
@@ -199,3 +200,8 @@ class Common(Configuration):
             'rest_framework.authentication.TokenAuthentication',
         )
     }
+
+    FIXTURE_DIRS = (
+        BASE_DIR + '/fixtures/',
+    )
+
