@@ -9,6 +9,38 @@ from django.core.validators import MaxValueValidator, MinValueValidator
 from rest_framework.authtoken.models import Token
 from holdtheline.users.models import User
 
+class Card(models.Model):
+    GREEN = 0
+    RED = 1
+    ORANGE = 2
+    BLUE = 3
+    YELLOW = 4
+    PURPLE = 5
+
+    SHORT_NAME = ('G', 'R', 'O', 'B', 'Y', 'P')
+
+    COLORS = (
+        (GREEN, 'Green'),
+        (RED, 'Red'),
+        (ORANGE, 'Orange'),
+        (BLUE, 'Blue'),
+        (YELLOW, 'Yellow'),
+        (PURPLE, 'Purple')
+    )
+
+    color = models.PositiveSmallIntegerField(choices=COLORS)
+    value = models.PositiveSmallIntegerField(validators=[
+            MaxValueValidator(10),
+            MinValueValidator(1)
+        ])
+
+    def __str__(self):
+        return u'%s%s' % (self.SHORT_NAME[self.color], self.value)
+
+    class Meta:
+        ordering = ("color", "value")
+        unique_together = (("color", "value"),)
+
 
 class Player(models.Model):
     user = models.OneToOneField(User, on_delete=models.CASCADE)
@@ -24,6 +56,90 @@ class Player(models.Model):
         ordering = ("user",)
 
 
+class Lane(models.Model):
+    TOP = 1
+    MID = 0
+    BOT = -1
+
+    FLAG_LOCATION = (
+        (BOT, 'Bottom'),
+        (MID, 'Unclaimed'),
+        (TOP, 'Top')
+    )
+
+    top1 = models.ForeignKey(Card, null=True, blank=True, default=None, on_delete=models.CASCADE, related_name='top1')
+    top2 = models.ForeignKey(Card, null=True, blank=True, default=None, on_delete=models.CASCADE, related_name='top2')
+    top3 = models.ForeignKey(Card, null=True, blank=True, default=None, on_delete=models.CASCADE, related_name='top3')
+    bot1 = models.ForeignKey(Card, null=True, blank=True, default=None, on_delete=models.CASCADE, related_name='bot1')
+    bot2 = models.ForeignKey(Card, null=True, blank=True, default=None, on_delete=models.CASCADE, related_name='bot2')
+    bot3 = models.ForeignKey(Card, null=True, blank=True, default=None, on_delete=models.CASCADE, related_name='bot3')
+    flag = models.SmallIntegerField(choices=FLAG_LOCATION, default=0)
+
+    def __str__(self):
+        output = ''
+
+        if self.flag == 1:
+            output = 'X'
+        if self.top1:
+            output = '%s %s' % (output, self.top1)
+        if self.top2:
+            output = '%s %s' % (output, self.top2)
+        if self.top3:
+            output = '%s %s' % (output, self.top3)
+        if self.flag == 0:
+            output = '%s X' % output
+        if self.bot1:
+            output = '%s %s' % (output, self.bot1)
+        if self.bot2:
+            output = '%s %s' % (output, self.bot2)
+        if self.bot3:
+            output = '%s %s' % (output, self.bot3)
+        if self.flag == -1:
+            output = '%s X' % output
+
+        return output
+
+    def location(self):
+        for loc in self.FLAG_LOCATION:
+            if self.flag == loc[0]:
+                return loc[1]
+        return 'Unknown'
+
+    def capture(self, location):
+        if location != self.TOP and location != self.BOT:
+            # raise error; can only capture top or bottom lane
+            pass
+        else:
+            self.flag = location
+            self.flag.save()
+
+
+class Lanes(models.Model):
+    lane1 = models.ForeignKey(Lane, null=False, blank=False, on_delete=models.CASCADE, related_name='lane1')
+    lane2 = models.ForeignKey(Lane, null=False, blank=False, on_delete=models.CASCADE, related_name='lane2')
+    lane3 = models.ForeignKey(Lane, null=False, blank=False, on_delete=models.CASCADE, related_name='lane3')
+    lane4 = models.ForeignKey(Lane, null=False, blank=False, on_delete=models.CASCADE, related_name='lane4')
+    lane5 = models.ForeignKey(Lane, null=False, blank=False, on_delete=models.CASCADE, related_name='lane5')
+    lane6 = models.ForeignKey(Lane, null=False, blank=False, on_delete=models.CASCADE, related_name='lane6')
+    lane7 = models.ForeignKey(Lane, null=False, blank=False, on_delete=models.CASCADE, related_name='lane7')
+    lane8 = models.ForeignKey(Lane, null=False, blank=False, on_delete=models.CASCADE, related_name='lane8')
+    lane9 = models.ForeignKey(Lane, null=False, blank=False, on_delete=models.CASCADE, related_name='lane9')
+
+    def __str__(self):
+        output = '%s %s %s %s %s %s %s %s %s)' % (
+            self.lane1.flag,
+            self.lane2.flag,
+            self.lane3.flag,
+            self.lane4.flag,
+            self.lane5.flag,
+            self.lane6.flag,
+            self.lane7.flag,
+            self.lane8.flag,
+            self.lane9.flag
+        )
+        return output
+
+
 class Game(models.Model):
     player1 = models.ForeignKey(Player, null=False, related_name='player1',
                                 on_delete=models.CASCADE)
@@ -34,13 +150,7 @@ class Game(models.Model):
     player4 = models.ForeignKey(Player, blank=True, null=True, related_name='player4',
                                 default=None, on_delete=models.CASCADE)
 
-    player_list = [
-        None,
-        player1,
-        player2,
-        player3,
-        player4,
-    ]
+    lanes = models.ForeignKey(Lanes, null=False, on_delete=models.CASCADE)
 
     turn = models.PositiveSmallIntegerField(default=0, validators=[
             MaxValueValidator(4),
@@ -125,129 +235,122 @@ class Game(models.Model):
         return results
 
 
-
-
-class Flag(models.Model):
-    TOP = 1
-    MID = 0
-    BOT = -1
-
-    FLAG_LOCATION = (
-        (BOT, 'Bottom'),
-        (MID, 'Unclaimed'),
-        (TOP, 'Top')
-    )
-
-    game = models.ForeignKey('Game', on_delete=models.CASCADE)
-    lane = models.PositiveSmallIntegerField(validators=[
-            MaxValueValidator(9),
-            MinValueValidator(1)
-        ])
-    won = models.SmallIntegerField(choices=FLAG_LOCATION, default=0)
+class Deck(models.Model):
+    game = models.ForeignKey(Game, null=False, blank=False, default=None, on_delete=models.CASCADE)
+    card = models.ForeignKey(Card, null=False, blank=False, on_delete=models.CASCADE)
 
     def __str__(self):
-        return u'Game: %s; Lane %s: %s' % (self.game.pk, self.lane, self.location())
-
-    def location(self):
-        for loc in self.FLAG_LOCATION:
-            if self.won == loc[0]:
-                return loc[1]
-        return 'Unknown'
-
-    def capture(self, location):
-        if location != self.TOP and location != self.BOT:
-           # raise error; can only capture top or bottom lane
-           pass
-        else:
-            self.won = location
-            self.won.save()
-
-    class Meta:
-        ordering = ("-game", "lane",)
+        return '%s %s' % (self.game.pk, self.card)
 
 
-
-class Card(models.Model):
-    GREEN = 0
-    RED = 1
-    ORANGE = 2
-    BLUE = 3
-    YELLOW = 4
-    PURPLE = 5
-
-    SHORT_NAME = ('G', 'R', 'O', 'B', 'Y', 'P')
-
-    COLORS = (
-        (GREEN, 'Green'),
-        (RED, 'Red'),
-        (ORANGE, 'Orange'),
-        (BLUE, 'Blue'),
-        (YELLOW, 'Yellow'),
-        (PURPLE, 'Purple')
-    )
-
-    color = models.PositiveSmallIntegerField(choices=COLORS)
-    value = models.PositiveSmallIntegerField(validators=[
-            MaxValueValidator(10),
-            MinValueValidator(1)
-        ])
+class Hand(models.Model):
+    game = models.ForeignKey(Game, null=False, blank=False, default=None, on_delete=models.CASCADE)
+    player = models.ForeignKey(Player, null=False, blank=False, on_delete=models.CASCADE)
+    card1 = models.ForeignKey(Card, null=True, blank=True, on_delete=models.CASCADE, related_name='card1')
+    card2 = models.ForeignKey(Card, null=True, blank=True, on_delete=models.CASCADE, related_name='card2')
+    card3 = models.ForeignKey(Card, null=True, blank=True, on_delete=models.CASCADE, related_name='card3')
+    card4 = models.ForeignKey(Card, null=True, blank=True, on_delete=models.CASCADE, related_name='card4')
+    card5 = models.ForeignKey(Card, null=True, blank=True, on_delete=models.CASCADE, related_name='card5')
 
     def __str__(self):
-        return u'%s%s' % (self.SHORT_NAME[self.color], self.value)
-
-    class Meta:
-        ordering = ("color", "value")
-        unique_together = (("color", "value"),)
-
-
-def location_map():
-    deck = 0
-    hand = [1, 2, 3, 4]
-    lane = [x for x in range(5, 59)]
-
-    locations = (
-        (deck, 'Deck'),
-        *tuple((x, 'Player %s' % x) for x in hand),
-        *tuple((x, get_lane_details(x)) for x in lane)
-    )
-
-    return locations
-
-def get_lane_details(value):
-    value += 1
-
-    lane = value // 6
-    side = 'Top' if (value // 3) % 2 else 'Bottom'
-    slot = (value % 3) + 1
-
-    return u'Lane: %s; Side: %s; Slot: %s' % (lane, side, slot)
-
-
-class CardLocation(models.Model):
-
-    locations = location_map()
-
-    game = models.ForeignKey('Game', on_delete=models.CASCADE)
-    card = models.ForeignKey('Card', on_delete=models.CASCADE)
-    location = models.SmallIntegerField(choices=locations, default=0)
-
-    class Meta:
-        ordering = ("-game", "location",)
-
-    def __str__(self):
-        return u'Game: %s; Card: %s; Location: %s' % (self.game.pk, self.card, self.get_location_type())
-
-    def get_location_type(self):
-        if self.location == 0:
-            return 'Deck'
-        elif self.location < 5:
-            return self.game.get_player_by_value(self.location)
-        else:
-            return get_lane_details(self.location)
+        output = ''
+        if self.card1:
+            output = '%s %s' % (output, self.card1)
+        if self.card2:
+            output = '%s %s' % (output, self.card2)
+        if self.card3:
+            output = '%s %s' % (output, self.card3)
+        if self.card4:
+            output = '%s %s' % (output, self.card4)
+        if self.card5:
+            output = '%s %s' % (output, self.card5)
+        return output
 
 
 
-
-
-
-
+                # class Flag(models.Model):
+#     TOP = 1
+#     MID = 0
+#     BOT = -1
+#
+#     FLAG_LOCATION = (
+#         (BOT, 'Bottom'),
+#         (MID, 'Unclaimed'),
+#         (TOP, 'Top')
+#     )
+#
+#     game = models.ForeignKey('Game', on_delete=models.CASCADE)
+#     lane = models.PositiveSmallIntegerField(validators=[
+#             MaxValueValidator(9),
+#             MinValueValidator(1)
+#         ])
+#     won = models.SmallIntegerField(choices=FLAG_LOCATION, default=0)
+#
+#     def __str__(self):
+#         return u'Game: %s; Lane %s: %s' % (self.game.pk, self.lane, self.location())
+#
+#     def location(self):
+#         for loc in self.FLAG_LOCATION:
+#             if self.won == loc[0]:
+#                 return loc[1]
+#         return 'Unknown'
+#
+#     def capture(self, location):
+#         if location != self.TOP and location != self.BOT:
+#            # raise error; can only capture top or bottom lane
+#            pass
+#         else:
+#             self.won = location
+#             self.won.save()
+#
+#     class Meta:
+#         ordering = ("-game", "lane",)
+#
+#
+#
+#
+#
+# def location_map():
+#     deck = 0
+#     hand = [1, 2, 3, 4]
+#     lane = [x for x in range(5, 59)]
+#
+#     locations = (
+#         (deck, 'Deck'),
+#         *tuple((x, 'Player %s' % x) for x in hand),
+#         *tuple((x, get_lane_details(x)) for x in lane)
+#     )
+#
+#     return locations
+#
+# def get_lane_details(value):
+#     value += 1
+#
+#     lane = value // 6
+#     side = 'Top' if (value // 3) % 2 else 'Bottom'
+#     slot = (value % 3) + 1
+#
+#     return u'Lane: %s; Side: %s; Slot: %s' % (lane, side, slot)
+#
+#
+# class CardLocation(models.Model):
+#
+#     locations = location_map()
+#
+#     game = models.ForeignKey('Game', on_delete=models.CASCADE)
+#     card = models.ForeignKey('Card', on_delete=models.CASCADE)
+#     location = models.SmallIntegerField(choices=locations, default=0)
+#
+#     class Meta:
+#         ordering = ("-game", "location",)
+#
+#     def __str__(self):
+#         return u'Game: %s; Card: %s; Location: %s' % (self.game.pk, self.card, self.get_location_type())
+#
+#     def get_location_type(self):
+#         if self.location == 0:
+#             return 'Deck'
+#         elif self.location < 5:
+#             return self.game.get_player_by_value(self.location)
+#         else:
+#             return get_lane_details(self.location)

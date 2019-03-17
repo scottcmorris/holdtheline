@@ -7,11 +7,14 @@ from rest_framework.routers import DefaultRouter
 from rest_framework.authtoken import views
 from .users.views import UserViewSet, UserCreateViewSet
 from .game.views import GameCreateViewSet, GameViewSet, GameUpdateViewSet
+from .game.views import MainViewSet, PlayerViewSet
 
 router = DefaultRouter(trailing_slash=False)
 router.register(r'users', UserViewSet)
 router.register(r'users', UserCreateViewSet)
 router.register(r'games', GameViewSet)
+router.register(r'main', MainViewSet)
+router.register(r'players', PlayerViewSet)
 # router.register(r'games/(?P<pk>\d+)/$', GameUpdateViewSet)
 # router.register(r'games/create', GameCreateViewSet)
 
@@ -24,7 +27,7 @@ urlpatterns = [
     re_path('api/v1/games/(?P<pk>\d+)/$', GameUpdateViewSet.as_view({'get': 'retrieve', 'put': 'update'}), name='games-update'),
     path('api/v1/games/create/', GameCreateViewSet.as_view({'post': 'create'}), name='games-create'),
 
-    # the 'api-root' from django rest-frameworks default router
+                  # the 'api-root' from django rest-frameworks default router
     # http://www.django-rest-framework.org/api-guide/routers/#defaultrouter
     re_path(r'^$', RedirectView.as_view(url=reverse_lazy('api-root'), permanent=False)),
 

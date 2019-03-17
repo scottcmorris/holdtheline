@@ -1,7 +1,8 @@
 from rest_framework import viewsets, mixins
-from rest_framework.permissions import AllowAny
-from .models import Game, Card, CardLocation, Player, Flag
-from .serializers import GameCreateSerializer, GameUpdateSerializer, GameViewSerializer
+from rest_framework.permissions import AllowAny, IsAdminUser
+from .models import Game, Hand, Lanes, Lane, Deck,Player
+from .serializers import GameCreateSerializer, GameUpdateSerializer, GameViewSerializer, GameSerializer, CardSerializer
+from .serializers import PlayerSerializer, LanesSerializer, LaneSerializer
 
 
 class GameCreateViewSet(mixins.CreateModelMixin,
@@ -36,3 +37,19 @@ class GameUpdateViewSet(
     queryset = Game.objects.all()
     serializer_class = GameUpdateSerializer
     permission_classes = (AllowAny,)
+
+
+class MainViewSet(viewsets.ModelViewSet):
+
+    queryset = Game.objects.all()
+    serializer_class = GameSerializer
+    ordering_fields = ('-id',)
+
+
+class LanesViewSet(viewsets.ModelViewSet):
+    queryset = Lanes.objects.all()
+    serializer_class = LanesSerializer
+
+class PlayerViewSet(viewsets.ModelViewSet):
+    queryset = Player.objects.all()
+    serializer_class = PlayerSerializer
