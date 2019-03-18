@@ -126,7 +126,7 @@ class Lanes(models.Model):
     lane9 = models.ForeignKey(Lane, null=False, blank=False, on_delete=models.CASCADE, related_name='lane9')
 
     def __str__(self):
-        output = '%s %s %s %s %s %s %s %s %s)' % (
+        output = '%s %s %s %s %s %s %s %s %s' % (
             self.lane1.flag,
             self.lane2.flag,
             self.lane3.flag,

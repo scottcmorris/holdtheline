@@ -1,3 +1,5 @@
+from django.urls import reverse
+from django.contrib.sites.shortcuts import get_current_site
 from rest_framework import serializers
 from .models import Game, Card, Lane, Lanes, Deck, Hand, Player
 from random import shuffle
@@ -50,13 +52,6 @@ class GameCreateSerializer(serializers.ModelSerializer):
             deck.save()
 
 
-class GameViewSerializer(serializers.ModelSerializer):
-
-    class Meta:
-        model = Game
-        fields = '__all__'
-
-
 class GameUpdateSerializer(serializers.ModelSerializer):
 
     class Meta:
@@ -81,6 +76,9 @@ class GameUpdateSerializer(serializers.ModelSerializer):
             return game
 
 
+
+############### Basic Nested Serializers #################
+
 class NestedSerializer(serializers.ModelSerializer):
 
     def __init__(self, *args, **kwargs):
@@ -92,22 +90,45 @@ class NestedSerializer(serializers.ModelSerializer):
             )
 
 
+class GameSerializer(NestedSerializer):
+    url = serializers.HyperlinkedIdentityField(
+        view_name='wallhack-games-detail',
+        lookup_field='pk'
+    )
+
+    class Meta:
+        model = Game
+        fields = ['url'] + [field.name for field in model._meta.fields if not field.primary_key]
+
+
 class LaneSerializer(NestedSerializer):
+    url = serializers.HyperlinkedIdentityField(
+        view_name='wallhack-lane-detail',
+        lookup_field='pk'
+    )
 
     class Meta:
         model = Lane
-        fields = [field.name for field in model._meta.fields if not field.primary_key]
+        fields = ['url'] + [field.name for field in model._meta.fields if not field.primary_key]
 
 
 class CardSerializer(NestedSerializer):
+    url = serializers.HyperlinkedIdentityField(
+        view_name='wallhack-card-detail',
+        lookup_field='pk'
+    )
 
     class Meta:
         model = Card
-        fields = [field.name for field in model._meta.fields if not field.primary_key]
+        fields = ['url'] + [field.name for field in model._meta.fields if not field.primary_key]
 
 
 class PlayerSerializer(NestedSerializer):
     hand = serializers.SerializerMethodField('player_hand')
+    url = serializers.HyperlinkedIdentityField(
+        view_name='wallhack-player-detail',
+        lookup_field='pk'
+    )
 
     def player_hand(self, player):
         hand = Hand.objects.filter(player=player, game=self.context.get('game'))
@@ -115,7 +136,7 @@ class PlayerSerializer(NestedSerializer):
 
     class Meta:
         model = Player
-        fields = [field.name for field in model._meta.fields if not field.primary_key] + ['hand']
+        fields = ['url'] + [field.name for field in model._meta.fields if not field.primary_key] + ['hand']
 
 
 class LanesSerializer(NestedSerializer):
@@ -128,27 +149,50 @@ class LanesSerializer(NestedSerializer):
     lane7 = LaneSerializer()
     lane8 = LaneSerializer()
     lane9 = LaneSerializer()
+    url = serializers.HyperlinkedIdentityField(
+        view_name='wallhack-lanes-detail',
+        lookup_field='pk'
+    )
 
     class Meta:
         model = Lanes
-        fields = [field.name for field in model._meta.fields if not field.primary_key]
+        fields = ['url'] + [field.name for field in model._meta.fields if not field.primary_key]
 
 
-class GameSerializer(NestedSerializer):
+class DeckSerializer(NestedSerializer):
+    card = CardSerializer()
+    url = serializers.HyperlinkedIdentityField(
+        view_name='wallhack-deck-detail',
+        lookup_field='pk'
+    )
+
+    class Meta:
+        model = Deck
+        fields = ['url'] + [field.name for field in model._meta.fields if not field.primary_key]
+
+
+class WallhackGameSerializer(NestedSerializer):
     player1 = PlayerSerializer()
     player2 = PlayerSerializer()
     player3 = PlayerSerializer()
     player4 = PlayerSerializer()
     lanes = LanesSerializer()
     deck = serializers.SerializerMethodField('game_deck')
+    url = serializers.HyperlinkedIdentityField(
+        view_name='wallhack-games-detail',
+        lookup_field='pk'
+    )
 
     def game_deck(self, game):
         deck = Deck.objects.filter(game=game).values('card',).all()
+        for card in deck:
+            card.update({'url': 'http://%s%s' % (get_current_site(self.context['request']),
+                                                 reverse('wallhack-card-detail', args=[card['card']]))})
         return deck
 
     class Meta:
         model = Game
-        fields = '__all__'
+        fields = ['url'] + [field.name for field in model._meta.fields if not field.primary_key] + ['deck']
 
 
 class HandSerializer(NestedSerializer):
@@ -157,7 +201,47 @@ class HandSerializer(NestedSerializer):
     card3 = CardSerializer()
     card4 = CardSerializer()
     card5 = CardSerializer()
+    url = serializers.HyperlinkedIdentityField(
+        view_name='wallhack-hand-detail',
+        lookup_field='pk'
+    )
 
     class Meta:
-        model = Lane
+        model = Hand
+        fields =  ['url'] + [field.name for field in model._meta.fields if not field.primary_key]
+
+########### Tabletop View: #############
+
+class PlayerNoHandSerializer(NestedSerializer):
+
+    class Meta:
+        model = Player
+        fields = ('nickname',)
+
+
+class LanesReadOnlySerializer(NestedSerializer):
+    lane1 = LaneSerializer(read_only=True)
+    lane2 = LaneSerializer(read_only=True)
+    lane3 = LaneSerializer(read_only=True)
+    lane4 = LaneSerializer(read_only=True)
+    lane5 = LaneSerializer(read_only=True)
+    lane6 = LaneSerializer(read_only=True)
+    lane7 = LaneSerializer(read_only=True)
+    lane8 = LaneSerializer(read_only=True)
+    lane9 = LaneSerializer(read_only=True)
+
+    class Meta:
+        model = Lanes
         fields = [field.name for field in model._meta.fields if not field.primary_key]
+
+
+class TableSerializer(NestedSerializer):
+    player1 = PlayerNoHandSerializer(read_only=True)
+    player2 = PlayerNoHandSerializer(read_only=True)
+    player3 = PlayerNoHandSerializer(read_only=True)
+    player4 = PlayerNoHandSerializer(read_only=True)
+    lanes = LanesReadOnlySerializer()
+
+    class Meta:
+        model = Game
+        fields = '__all__'
