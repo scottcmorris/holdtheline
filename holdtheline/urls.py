@@ -6,14 +6,13 @@ from django.views.generic.base import RedirectView
 from rest_framework.routers import DefaultRouter
 from rest_framework.authtoken import views
 from .users.views import UserViewSet, UserCreateViewSet
-from .game.views import GameCreateViewSet, GamesViewSet, TableViewSet, HandViewSet
+from .game.views import GameCreateViewSet, GamesViewSet, TableViewSet
 from .game.views import WallhackViewSet, AdminPlayerViewSet, AdminGamesViewSet, AdminCardViewSet, AdminDeckViewSet
-from .game.views import AdminHandViewSet, AdminLanesViewSet, AdminLaneViewSet
+from .game.views import AdminLanesViewSet, AdminLaneViewSet
 
 router = DefaultRouter(trailing_slash=False)
 router.register(r'games', GamesViewSet)
 router.register(r'table', TableViewSet)
-router.register(r'hand', HandViewSet)
 router.register(r'wallhack', WallhackViewSet)
 router.register(r'users', UserViewSet)
 router.register(r'users', UserCreateViewSet)
@@ -42,10 +41,6 @@ urlpatterns = [
             AdminGamesViewSet.as_view({'get': 'list', 'post': 'create'}), name='wallhack-games-list'),
     re_path('api/v1/wallhack/games/(?P<pk>\d+)$',
             AdminGamesViewSet.as_view({'get': 'retrieve', 'put': 'update'}), name='wallhack-games-detail'),
-    re_path('api/v1/wallhack/hand$',
-            AdminHandViewSet.as_view({'get': 'list'}), name='wallhack-hand-list'),
-    re_path('api/v1/wallhack/hand/(?P<pk>\d+)$',
-            AdminHandViewSet.as_view({'get': 'retrieve', 'put': 'update'}), name='wallhack-hand-detail'),
     re_path('api/v1/wallhack/lane$',
             AdminLaneViewSet.as_view({'get': 'list'}), name='wallhack-lane-list'),
     re_path('api/v1/wallhack/lane/(?P<pk>\d+)$',

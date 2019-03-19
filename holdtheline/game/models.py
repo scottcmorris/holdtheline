@@ -99,11 +99,100 @@ class Lane(models.Model):
 
         return output
 
+    def play_card(self, card, side):
+        side = 'top' if str(side) == '1' or str(side) == 'top' else 'bot'
+        if side == 'top':
+            slot = self.find_open_slot(side)
+            if slot == 1:
+                self.top1 = card
+            elif slot == 2:
+                self.top2 = card
+            elif slot == 3:
+                self.top3 = card
+            else:
+                print('raise an error; no slot available')
+                pass
+        else:
+            slot = self.find_open_slot(side)
+            if slot == 1:
+                self.bot1 = card
+            elif slot == 2:
+                self.bot2 = card
+            elif slot == 3:
+                self.bot3 = card
+            else:
+                print('raise an error; no slot available')
+
+        return self
+
+
+    def find_open_slot(self, side):
+        if side == 'top':
+            if self.top1 is None:
+                return 1
+            elif self.top2 is None:
+                return 2
+            elif self.top3 is None:
+                return 3
+            return -1
+        else:
+            if self.bot1 is None:
+                return 1
+            elif self.bot2 is None:
+                return 2
+            elif self.bot3 is None:
+                return 3
+            return -1
+
+
+    def top_full(self):
+        return bool(self.top1) + bool(self.top2) + bool(self.top3) == 3
+
+
+    def bot_full(self):
+        return bool(self.bot1) + bool(self.bot2) + bool(self.bot3) == 3
+
+
+    def check_for_winner(self, side):
+        if self.top_full() and self.get_value('top') > self.get_value('bot'):
+            self.capture(self.TOP)
+        elif self.bot_full() and self.get_value('bot') > self.get_value('top'):
+            self.capture(self.BOT)
+        return self
+
+
+    def get_value(self, side):
+        return self.get_value_top() if str(side) == '1' or str(side) == 'top' else self.get_value_bot()
+
+
+    def get_value_top(self):
+        value = 0
+        if self.top1 is not None:
+            value += self.top1
+        if self.top2 is not None:
+            value += self.top2
+        if self.top3 is not None:
+            value += self.top3
+        return value
+
+
+    def get_value_bot(self):
+        value = 0
+        if self.bot1 is not None:
+            value += self.bot1
+        if self.bot2 is not None:
+            value += self.bot2
+        if self.bot3 is not None:
+            value += self.bot3
+        return value
+
+
     def location(self):
         for loc in self.FLAG_LOCATION:
             if self.flag == loc[0]:
                 return loc[1]
         return 'Unknown'
+
 
     def capture(self, location):
         if location != self.TOP and location != self.BOT:
@@ -149,10 +238,7 @@ class Game(models.Model):
                                 default=None, on_delete=models.CASCADE)
     player4 = models.ForeignKey(Player, blank=True, null=True, related_name='player4',
                                 default=None, on_delete=models.CASCADE)
-    hand1 = models.ManyToManyField('Hand', related_name='hand1')
-    hand2 = models.ManyToManyField('Hand', related_name='hand2')
-    hand3 = models.ManyToManyField('Hand', related_name='hand3')
-    hand4 = models.ManyToManyField('Hand', related_name='hand4')
+
     deck = models.ManyToManyField('Deck')
 
     lanes = models.ForeignKey(Lanes, null=False, on_delete=models.CASCADE)
@@ -247,16 +333,17 @@ class Deck(models.Model):
                                 on_delete=models.CASCADE, related_name='game_fk')
     card_fk = models.ForeignKey(Card, null=False, blank=False, default=-1,
                                 on_delete=models.CASCADE, related_name='card_fk')
+    player_fk = models.ForeignKey(Player, null=True, blank=True, default=None,
+                                  on_delete=models.CASCADE)
     is_played = models.BooleanField(null=False, blank=False, default=False)
 
     def __str__(self):
-        return '%s %s' % (self.game.pk, self.card)
+        return '%s %s %s %s' % (self.game_fk.pk, self.player_fk, self.card_fk, not(self.is_played))
 
+    def play_card(self):
+        self.is_played = True
+        return self.card_fk
 
-class Hand(models.Model):
-    game_fk = models.ForeignKey(Game, null=False, blank=False, default=None, on_delete=models.CASCADE)
-    player_fk = models.ForeignKey(Player, null=False, blank=False, on_delete=models.CASCADE)
-    card_fk = models.ForeignKey(Card, null=True, blank=True, on_delete=models.CASCADE)
-
-    def __str__(self):
-        return '%s' % self.card_fk
+    def draw_card(self, player):
+        self.player_fk = player
+        return self.card_fk

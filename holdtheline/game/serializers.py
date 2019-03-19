@@ -1,12 +1,12 @@
 from django.urls import reverse
 from django.contrib.sites.shortcuts import get_current_site
 from rest_framework import serializers
-from .models import Game, Card, Lane, Lanes, Deck, Hand, Player
+from .models import Game, Card, Lane, Lanes, Deck, Player
 from random import shuffle
 
 
 class GameCreateSerializer(serializers.ModelSerializer):
-
+    ## Serializer used to create games
     class Meta:
         model = Game
         fields = ('pk', 'player1',)
@@ -52,6 +52,43 @@ class GameCreateSerializer(serializers.ModelSerializer):
             deck.save()
             self.game.deck.add(deck)
 
+class GameStartSerializer(serializers.ModelSerializer):
+    ## Serializer used to Start games
+    class Meta:
+        model = Game
+        fields = ('pk', 'turn')
+
+    def update(self, game, validated_data):
+        turn = validated_data.pop('turn')
+
+        # If current turn is 0, then the game hasn't started.
+        # If this serializer has a PUT for turn, then we can kick off a game
+        if game.turn == 0 and turn > 0:
+            # Need either 2 or 4 players to play
+            players = game.player_count()
+            if players % 2 == 0:
+                game.next_turn()
+
+                # Now let's deal some cards
+                if players == 2:
+                    hand_size = 7
+                    player_list = [game.player1, game.player2]
+                elif players == 4:
+                    hand_size = 5
+                    player_list = [game.player1, game.player2, game.player3, game.player4]
+
+                for player in player_list:
+                    for _ in range(0, hand_size * game.player_count()):
+                        card = game.deck.objects.filter(game_fk=game, player_fk=None)[:1]
+                        card.update(player_fk=player)
+                        card.save()
+
+                game.save()
+        return game
+
+    def retrieve(self, game, validated_data):
+        return game
+
 
 class GameUpdateSerializer(serializers.ModelSerializer):
 
@@ -75,6 +112,7 @@ class GameUpdateSerializer(serializers.ModelSerializer):
     def retrieve(self, game, validated_data=None):
         if validated_data is not None:
             return game
+
 
 
 
@@ -166,26 +204,11 @@ class DeckSerializer(NestedSerializer):
         fields = ['url'] + [field.name for field in model._meta.fields if not field.primary_key]
 
 
-class HandSerializer(NestedSerializer):
-    url = serializers.HyperlinkedIdentityField(
-        view_name='wallhack-hand-detail',
-        lookup_field='pk'
-    )
-
-    class Meta:
-        model = Hand
-        fields =  ['url'] + [field.name for field in model._meta.fields if not field.primary_key]
-
-
 class WallhackGameSerializer(NestedSerializer):
     player1 = PlayerSerializer()
     player2 = PlayerSerializer()
     player3 = PlayerSerializer()
     player4 = PlayerSerializer()
-    hand1 = HandSerializer(many=True, read_only=True)
-    hand2 = HandSerializer(many=True, read_only=True)
-    hand3 = HandSerializer(many=True, read_only=True)
-    hand4 = HandSerializer(many=True, read_only=True)
     lanes = LanesSerializer()
     deck = DeckSerializer(many=True, read_only=True)
     url = serializers.HyperlinkedIdentityField(
@@ -195,8 +218,7 @@ class WallhackGameSerializer(NestedSerializer):
 
     class Meta:
         model = Game
-        fields = (['url'] + ['deck'] + [field.name for field in model._meta.fields if not field.primary_key] +
-                  ['hand1'] + ['hand2'] + ['hand3'] + ['hand4'])
+        fields = ['url'] + ['deck'] + [field.name for field in model._meta.fields if not field.primary_key]
 
 
 

@@ -1,10 +1,10 @@
 from rest_framework import viewsets, mixins
 from rest_framework.permissions import AllowAny, IsAdminUser
-from .models import Game, Hand, Lanes, Lane, Deck, Player, Card
+from .models import Game, Lanes, Lane, Deck, Player, Card
 from .permissions import IsUser, IsSuperUser
 from .serializers import GameCreateSerializer, TableSerializer
 from .serializers import WallhackGameSerializer, PlayerSerializer, LanesSerializer, LaneSerializer
-from .serializers import HandSerializer, DeckSerializer, CardSerializer, GameSerializer
+from .serializers import DeckSerializer, CardSerializer, GameSerializer
 
 
 
@@ -53,13 +53,6 @@ class AdminLaneViewSet(viewsets.ModelViewSet):
     permission_classes = (IsAdminUser,)
 
 
-class AdminHandViewSet(viewsets.ModelViewSet):
-    queryset = Hand.objects.all()
-    serializer_class = HandSerializer
-    ordering_fields = ('-id',)
-    permission_classes = (IsAdminUser,)
-
-
 class AdminDeckViewSet(viewsets.ModelViewSet):
     queryset = Deck.objects.all()
     serializer_class = DeckSerializer
@@ -94,18 +87,6 @@ class GameCreateViewSet(mixins.CreateModelMixin,
 class TableViewSet(viewsets.ModelViewSet):
     queryset = Game.objects.all()
     serializer_class = TableSerializer
-
-    def get_permissions(self):
-        if self.action == 'list':
-            self.permission_classes = (IsSuperUser,)
-        elif self.action == 'retrieve':
-            self.permission_classes = (IsUser,)
-        return super(self.__class__, self).get_permissions()
-
-
-class HandViewSet(viewsets.ModelViewSet):
-    queryset = Hand.objects.all()
-    serializer_class = HandSerializer
 
     def get_permissions(self):
         if self.action == 'list':
