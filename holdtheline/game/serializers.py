@@ -48,8 +48,9 @@ class GameCreateSerializer(serializers.ModelSerializer):
         shuffle(cards)
 
         for card in cards:
-            deck = Deck(game=self.game, card=card)
+            deck = Deck(game_fk=self.game, card_fk=card)
             deck.save()
+            self.game.deck.add(deck)
 
 
 class GameUpdateSerializer(serializers.ModelSerializer):
@@ -124,19 +125,14 @@ class CardSerializer(NestedSerializer):
 
 
 class PlayerSerializer(NestedSerializer):
-    hand = serializers.SerializerMethodField('player_hand')
     url = serializers.HyperlinkedIdentityField(
         view_name='wallhack-player-detail',
         lookup_field='pk'
     )
 
-    def player_hand(self, player):
-        hand = Hand.objects.filter(player=player, game=self.context.get('game'))
-        return list(hand)
-
     class Meta:
         model = Player
-        fields = ['url'] + [field.name for field in model._meta.fields if not field.primary_key] + ['hand']
+        fields = ['url'] + [field.name for field in model._meta.fields if not field.primary_key]
 
 
 class LanesSerializer(NestedSerializer):
@@ -160,7 +156,6 @@ class LanesSerializer(NestedSerializer):
 
 
 class DeckSerializer(NestedSerializer):
-    card = CardSerializer()
     url = serializers.HyperlinkedIdentityField(
         view_name='wallhack-deck-detail',
         lookup_field='pk'
@@ -171,36 +166,7 @@ class DeckSerializer(NestedSerializer):
         fields = ['url'] + [field.name for field in model._meta.fields if not field.primary_key]
 
 
-class WallhackGameSerializer(NestedSerializer):
-    player1 = PlayerSerializer()
-    player2 = PlayerSerializer()
-    player3 = PlayerSerializer()
-    player4 = PlayerSerializer()
-    lanes = LanesSerializer()
-    deck = serializers.SerializerMethodField('game_deck')
-    url = serializers.HyperlinkedIdentityField(
-        view_name='wallhack-games-detail',
-        lookup_field='pk'
-    )
-
-    def game_deck(self, game):
-        deck = Deck.objects.filter(game=game).values('card',).all()
-        for card in deck:
-            card.update({'url': 'http://%s%s' % (get_current_site(self.context['request']),
-                                                 reverse('wallhack-card-detail', args=[card['card']]))})
-        return deck
-
-    class Meta:
-        model = Game
-        fields = ['url'] + [field.name for field in model._meta.fields if not field.primary_key] + ['deck']
-
-
 class HandSerializer(NestedSerializer):
-    card1 = CardSerializer()
-    card2 = CardSerializer()
-    card3 = CardSerializer()
-    card4 = CardSerializer()
-    card5 = CardSerializer()
     url = serializers.HyperlinkedIdentityField(
         view_name='wallhack-hand-detail',
         lookup_field='pk'
@@ -209,6 +175,30 @@ class HandSerializer(NestedSerializer):
     class Meta:
         model = Hand
         fields =  ['url'] + [field.name for field in model._meta.fields if not field.primary_key]
+
+
+class WallhackGameSerializer(NestedSerializer):
+    player1 = PlayerSerializer()
+    player2 = PlayerSerializer()
+    player3 = PlayerSerializer()
+    player4 = PlayerSerializer()
+    hand1 = HandSerializer(many=True, read_only=True)
+    hand2 = HandSerializer(many=True, read_only=True)
+    hand3 = HandSerializer(many=True, read_only=True)
+    hand4 = HandSerializer(many=True, read_only=True)
+    lanes = LanesSerializer()
+    deck = DeckSerializer(many=True, read_only=True)
+    url = serializers.HyperlinkedIdentityField(
+        view_name='wallhack-games-detail',
+        lookup_field='pk'
+    )
+
+    class Meta:
+        model = Game
+        fields = (['url'] + ['deck'] + [field.name for field in model._meta.fields if not field.primary_key] +
+                  ['hand1'] + ['hand2'] + ['hand3'] + ['hand4'])
+
+
 
 ########### Tabletop View: #############
 

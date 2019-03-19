@@ -149,8 +149,15 @@ class Game(models.Model):
                                 default=None, on_delete=models.CASCADE)
     player4 = models.ForeignKey(Player, blank=True, null=True, related_name='player4',
                                 default=None, on_delete=models.CASCADE)
+    hand1 = models.ManyToManyField('Hand', related_name='hand1')
+    hand2 = models.ManyToManyField('Hand', related_name='hand2')
+    hand3 = models.ManyToManyField('Hand', related_name='hand3')
+    hand4 = models.ManyToManyField('Hand', related_name='hand4')
+    deck = models.ManyToManyField('Deck')
 
     lanes = models.ForeignKey(Lanes, null=False, on_delete=models.CASCADE)
+
+
 
     turn = models.PositiveSmallIntegerField(default=0, validators=[
             MaxValueValidator(4),
@@ -236,121 +243,20 @@ class Game(models.Model):
 
 
 class Deck(models.Model):
-    game = models.ForeignKey(Game, null=False, blank=False, default=None, on_delete=models.CASCADE)
-    card = models.ForeignKey(Card, null=False, blank=False, on_delete=models.CASCADE)
+    game_fk = models.ForeignKey(Game, null=False, blank=False, default=-1,
+                                on_delete=models.CASCADE, related_name='game_fk')
+    card_fk = models.ForeignKey(Card, null=False, blank=False, default=-1,
+                                on_delete=models.CASCADE, related_name='card_fk')
+    is_played = models.BooleanField(null=False, blank=False, default=False)
 
     def __str__(self):
         return '%s %s' % (self.game.pk, self.card)
 
 
 class Hand(models.Model):
-    game = models.ForeignKey(Game, null=False, blank=False, default=None, on_delete=models.CASCADE)
-    player = models.ForeignKey(Player, null=False, blank=False, on_delete=models.CASCADE)
-    card1 = models.ForeignKey(Card, null=True, blank=True, on_delete=models.CASCADE, related_name='card1')
-    card2 = models.ForeignKey(Card, null=True, blank=True, on_delete=models.CASCADE, related_name='card2')
-    card3 = models.ForeignKey(Card, null=True, blank=True, on_delete=models.CASCADE, related_name='card3')
-    card4 = models.ForeignKey(Card, null=True, blank=True, on_delete=models.CASCADE, related_name='card4')
-    card5 = models.ForeignKey(Card, null=True, blank=True, on_delete=models.CASCADE, related_name='card5')
+    game_fk = models.ForeignKey(Game, null=False, blank=False, default=None, on_delete=models.CASCADE)
+    player_fk = models.ForeignKey(Player, null=False, blank=False, on_delete=models.CASCADE)
+    card_fk = models.ForeignKey(Card, null=True, blank=True, on_delete=models.CASCADE)
 
     def __str__(self):
-        output = ''
-        if self.card1:
-            output = '%s %s' % (output, self.card1)
-        if self.card2:
-            output = '%s %s' % (output, self.card2)
-        if self.card3:
-            output = '%s %s' % (output, self.card3)
-        if self.card4:
-            output = '%s %s' % (output, self.card4)
-        if self.card5:
-            output = '%s %s' % (output, self.card5)
-        return output
-
-
-
-                # class Flag(models.Model):
-#     TOP = 1
-#     MID = 0
-#     BOT = -1
-#
-#     FLAG_LOCATION = (
-#         (BOT, 'Bottom'),
-#         (MID, 'Unclaimed'),
-#         (TOP, 'Top')
-#     )
-#
-#     game = models.ForeignKey('Game', on_delete=models.CASCADE)
-#     lane = models.PositiveSmallIntegerField(validators=[
-#             MaxValueValidator(9),
-#             MinValueValidator(1)
-#         ])
-#     won = models.SmallIntegerField(choices=FLAG_LOCATION, default=0)
-#
-#     def __str__(self):
-#         return u'Game: %s; Lane %s: %s' % (self.game.pk, self.lane, self.location())
-#
-#     def location(self):
-#         for loc in self.FLAG_LOCATION:
-#             if self.won == loc[0]:
-#                 return loc[1]
-#         return 'Unknown'
-#
-#     def capture(self, location):
-#         if location != self.TOP and location != self.BOT:
-#            # raise error; can only capture top or bottom lane
-#            pass
-#         else:
-#             self.won = location
-#             self.won.save()
-#
-#     class Meta:
-#         ordering = ("-game", "lane",)
-#
-#
-#
-#
-#
-# def location_map():
-#     deck = 0
-#     hand = [1, 2, 3, 4]
-#     lane = [x for x in range(5, 59)]
-#
-#     locations = (
-#         (deck, 'Deck'),
-#         *tuple((x, 'Player %s' % x) for x in hand),
-#         *tuple((x, get_lane_details(x)) for x in lane)
-#     )
-#
-#     return locations
-#
-# def get_lane_details(value):
-#     value += 1
-#
-#     lane = value // 6
-#     side = 'Top' if (value // 3) % 2 else 'Bottom'
-#     slot = (value % 3) + 1
-#
-#     return u'Lane: %s; Side: %s; Slot: %s' % (lane, side, slot)
-#
-#
-# class CardLocation(models.Model):
-#
-#     locations = location_map()
-#
-#     game = models.ForeignKey('Game', on_delete=models.CASCADE)
-#     card = models.ForeignKey('Card', on_delete=models.CASCADE)
-#     location = models.SmallIntegerField(choices=locations, default=0)
-#
-#     class Meta:
-#         ordering = ("-game", "location",)
-#
-#     def __str__(self):
-#         return u'Game: %s; Card: %s; Location: %s' % (self.game.pk, self.card, self.get_location_type())
-#
-#     def get_location_type(self):
-#         if self.location == 0:
-#             return 'Deck'
-#         elif self.location < 5:
-#             return self.game.get_player_by_value(self.location)
-#         else:
-#             return get_lane_details(self.location)
+        return '%s' % self.card_fk
