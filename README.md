@@ -24,6 +24,13 @@ Run a command inside the docker container:
 docker-compose run --rm web [command]
 ```
 
+To create a superuser to view endpoints on 127.0.0.1:8000:
+
+```bash
+docker-compose up -d
+docker exec -i -t holdtheline_web_1 python manage.py createsuperuser
+```
+
 # Continuous Deployment
 
 Deployment is automated via Travis. When builds pass on the master or qa branch, Travis will deploy that branch to Heroku. Follow these steps to enable this feature.
